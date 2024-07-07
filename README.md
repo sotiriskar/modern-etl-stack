@@ -1,5 +1,7 @@
 # Netflix Big Data Stack
 
+<img src="https://github.com/sotiriskar/netflix-big-data-stack/assets/36128807/b86d6ac2-8e7c-4f0e-a6ea-8b21b3cd6259" width="100%" height="100%" />
+
 #### **Work in Progress**
 
 This comprehensive guide covers the setup and usage of the Netflix Big Data Stack. This stack is designed to handle large volumes of data with efficiency and scalability, leveraging some of the most powerful open-source technologies in the big data ecosystem.
