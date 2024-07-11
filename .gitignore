@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+jars/
 develop-eggs/
 dist/
 downloads/
@@ -123,6 +124,8 @@ celerybeat.pid
 
 # Environments
 *.txt
+*.csv
+*.ipynb
 !requirements.txt
 .env
 .venv
