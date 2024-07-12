@@ -6,7 +6,7 @@ services:
       - "9000:9000"  # MinIO console and S3 API
       - "9001:9001"  # MinIO console for monitoring and management
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
     command: server /data --console-address ":9001"
     restart: always
