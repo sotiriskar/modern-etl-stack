@@ -13,7 +13,9 @@ producer = Producer(conf)
 fake = Faker()
 
 def generate_fake_event():
-    location = providers.geo.Provider(fake).local_latlng(country_code='US')
+    country_choice = choice(['US', 'CA', 'MX', 'GB', 'FR', 'DE', 'IT', 'ES', 'JP', 'CN', 'IN', 'BR', 'AU', 'RU'])
+
+    location = providers.geo.Provider(fake).local_latlng(country_code=country_choice)
     longitude = location[1]
     latitude = location[0]
 

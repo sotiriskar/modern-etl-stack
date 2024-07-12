@@ -16,34 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-volumes:
-  metadata_data: {}
-  middle_var: {}
-  historical_var: {}
-  broker_var: {}
-  coordinator_var: {}
-  router_var: {}
-  druid_shared: {}
-
-
 services:
   postgres:
     platform: linux/amd64
-    container_name: druid-postgres
+    container_name: postgres-druid
     image: postgres:latest
     ports:
       - "5432:5432"
-    volumes:
-      - metadata_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=FoolishPassword
       - POSTGRES_USER=druid
       - POSTGRES_DB=druid
 
-  # Need 3.5 or later for container nodes
   zookeeper:
     platform: linux/amd64
-    container_name: druid-zookeeper
+    container_name: zookeeper
     image: zookeeper:3.5.10
     ports:
       - "2181:2181"
@@ -54,9 +41,6 @@ services:
     platform: linux/amd64
     image: apache/druid:30.0.0
     container_name: coordinator
-    volumes:
-      - druid_shared:/opt/shared
-      - coordinator_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -70,9 +54,7 @@ services:
   broker:
     platform: linux/amd64
     image: apache/druid:30.0.0
-    container_name: druid-broker
-    volumes:
-      - broker_var:/opt/druid/var
+    container_name: broker
     depends_on:
       - zookeeper
       - postgres
@@ -83,18 +65,11 @@ services:
       - broker
     env_file:
       - environment
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SSL:SSL
 
   historical:
     platform: linux/amd64
     image: apache/druid:30.0.0
     container_name: historical
-    volumes:
-      - druid_shared:/opt/shared
-      - historical_var:/opt/druid/var
     depends_on: 
       - zookeeper
       - postgres
@@ -110,9 +85,6 @@ services:
     platform: linux/amd64
     image: apache/druid:30.0.0
     container_name: middlemanager
-    volumes:
-      - druid_shared:/opt/shared
-      - middle_var:/opt/druid/var
     depends_on: 
       - zookeeper
       - postgres
@@ -129,8 +101,6 @@ services:
     platform: linux/amd64
     image: apache/druid:30.0.0
     container_name: router
-    volumes:
-      - router_var:/opt/druid/var
     depends_on:
       - zookeeper
       - postgres
@@ -141,3 +111,29 @@ services:
       - router
     env_file:
       - environment
+
+  # zookeeper-kafka:
+  #   platform: linux/amd64
+  #   image: confluentinc/cp-zookeeper:7.0.1
+  #   container_name: zookeeper-kafka
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+
+  # broker-kafka:
+  #   platform: linux/amd64
+  #   image: confluentinc/cp-kafka:7.0.1
+  #   container_name: broker-kafka
+  #   ports:
+  #     - "9092:9092"
+  #   depends_on:
+  #     - zookeeper-kafka
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-kafka:2181'
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,SSL:SSL
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker-kafka:29092
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0

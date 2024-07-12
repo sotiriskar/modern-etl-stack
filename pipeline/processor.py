@@ -2,12 +2,12 @@ from pyflink.common import Types
 from pyflink.datastream import StreamExecutionEnvironment
 from pyflink.datastream.connectors.kafka import FlinkKafkaConsumer, FlinkKafkaProducer
 from pyflink.common.serialization import SimpleStringSchema
-from pyflink.table import StreamTableEnvironment, DataTypes, EnvironmentSettings
-from pyflink.table.expressions import lit
+from pyflink.table import StreamTableEnvironment, EnvironmentSettings
 import os
 import pytz
 import json
 import datetime
+import time
 import requests
 
 
@@ -30,14 +30,30 @@ kafka_consumer.set_start_from_earliest()
 def get_location_from_coordinates(latitude, longitude):
     url = f'https://geocode.xyz/{latitude},{longitude}'
     params = {'geoit': 'json'}
-    response = requests.get(url, params=params)
-    country = response.json().get('country', 'Unknown')
-    return country
+    max_attempts = 5
+    attempt = 0
+    
+    while attempt < max_attempts:
+        response = requests.get(url, params=params)
+        country = response.json().get('country', 'Unknown')
+        country_code = response.json().get('prov', 'Unknown')
+        
+        if country_code != "Throttled! See geocode.xyz/pricing":
+            return country, country_code
+        else:
+            attempt += 1
+            country_code = 'Unknown'
+            time.sleep(1)
+    
+    country = 'Unknown'
+    country_code = 'Unknown'
+    return country, country_code
 
 def process_function(value):
     record = json.loads(value)
-    country = get_location_from_coordinates(record['latitude'], record['longitude'])
-    record['location'] = country
+    country, country_code = get_location_from_coordinates(record['latitude'], record['longitude'])
+    record['country'] = country
+    record['country_code'] = country_code
     record['status'] = 'accepted' if 'United States' in country else 'rejected'
     record['timestamp'] = datetime.datetime.fromtimestamp(record['timestamp'], pytz.UTC).strftime('%Y-%m-%d %H:%M:%S%z')
     processed_value = json.dumps(record)
@@ -57,7 +73,9 @@ serialization_schema = SimpleStringSchema()
 kafka_producer = FlinkKafkaProducer(
     topic='processed_sessions',
     serialization_schema=serialization_schema,
-    producer_config={'bootstrap.servers': 'localhost:9092'}
+    producer_config={
+        'bootstrap.servers': 'localhost:9092',
+        }
 )
 
 # Add the Kafka producer as a sink to the data stream
