@@ -139,3 +139,10 @@ This command will start the consumer script, which reads the data from the Kafka
 ### Conclusion
 
 The Netflix Big Data Stack provides a robust framework for processing, storing, and analyzing large datasets. By combining the power of Apache Kafka, Apache Flink, Apache Druid, Apache Superset, and MinIO, you can build a scalable and efficient data pipeline that meets your organization's needs. This stack is designed to be flexible and extensible, allowing you to customize it to suit your specific requirements. I hope this guide helps you get started with the Netflix Big Data Stack and explore the possibilities of big data processing and analytics.
+
+
+### Sources
+- https://blog.min.io/a-developers-introduction-to-apache-iceberg-using-minio/
+- https://druid.apache.org/docs/latest/tutorials/
+- https://superset.apache.org/docs/quickstart
+- https://nightlies.apache.org/flink/flink-docs-master/api/python/examples/datastream/index.html

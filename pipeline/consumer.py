@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from confluent_kafka import Consumer
+import pyarrow as pa
 import pandas as pd
 import json
 import uuid
@@ -41,10 +42,42 @@ if __name__ == '__main__':
                 message = json.loads(msg.value().decode('utf-8'))
 
                 # create a DataFrame from the message
-                df = pd.DataFrame([message])
+                pandas_df = pd.DataFrame([message])
 
-                # save the DataFrame to a CSV file
-                df.to_csv(f"session_{uuid.uuid4()}.csv", index=False)
+                # convert timestamp to string
+                pandas_df['timestamp'] = pandas_df['timestamp'].astype(str)
+
+                pyarrow_df = pa.Table.from_pandas(pandas_df)
+
+                #  ICEBERG STUFF HERE
+                from pyiceberg.catalog import load_catalog
+
+                catalog = load_catalog(
+                    "docs",
+                    **{
+                        "uri": "http://127.0.0.1:8181",
+                        "s3.endpoint": "http://127.0.0.1:9000",
+                        "py-io-impl": "pyiceberg.io.pyarrow.PyArrowFileIO",
+                        "s3.access-key-id": "admin",
+                        "s3.secret-access-key": "password",
+                    }
+                )
+
+                # Create a table if it does not exist
+                try:
+                    table = catalog.create_table('default.sessions', schema=pyarrow_df.schema)
+                except:
+                    table = catalog.load_table('default.sessions')
+
+                # Append the data to the table
+                table.append(pyarrow_df)
+
+                # create catalog
+                table = catalog.load_table('default.sessions')
+
+                # Append the data to the table
+                table.append(pyarrow_df)
+
 
     except KeyboardInterrupt:
         pass
