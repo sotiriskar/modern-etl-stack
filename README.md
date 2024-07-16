@@ -112,6 +112,8 @@ docker-compose up -d
 
 This command will start the Superset server in detached mode, making it accessible at http://localhost:8088 for the main interface. Default credentials are admin/admin. You can now proceed to configure and use Superset as part of your Big Data Stack demonstration, connecting it to the various data sources and visualizing the results.
 
+Settings > Database Connection > Database > Apache Druid > SQLALCHEMY URI*: druid://host.docker.internal:8082/druid/v2/sql/
+
 
 ### Running the Stack
 
@@ -140,6 +142,7 @@ This command will start the consumer script, which reads the data from the Kafka
 
 The Netflix Big Data Stack provides a robust framework for processing, storing, and analyzing large datasets. By combining the power of Apache Kafka, Apache Flink, Apache Druid, Apache Superset, and MinIO, you can build a scalable and efficient data pipeline that meets your organization's needs. This stack is designed to be flexible and extensible, allowing you to customize it to suit your specific requirements. I hope this guide helps you get started with the Netflix Big Data Stack and explore the possibilities of big data processing and analytics.
 
+### How to 
 
 ### Sources
 - https://blog.min.io/a-developers-introduction-to-apache-iceberg-using-minio/

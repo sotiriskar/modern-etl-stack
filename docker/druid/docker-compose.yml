@@ -1,15 +1,4 @@
 services:
-  postgres:
-    platform: linux/amd64
-    container_name: postgres-druid
-    image: postgres:latest
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=FoolishPassword
-      - POSTGRES_USER=druid
-      - POSTGRES_DB=druid
-
   zookeeper:
     platform: linux/amd64
     container_name: zookeeper
@@ -25,7 +14,6 @@ services:
     container_name: coordinator
     depends_on:
       - zookeeper
-      - postgres
     ports:
       - "8081:8081"
     command:
@@ -39,7 +27,6 @@ services:
     container_name: broker
     depends_on:
       - zookeeper
-      - postgres
       - coordinator
     ports:
       - "8082:8082"
@@ -54,7 +41,6 @@ services:
     container_name: historical
     depends_on: 
       - zookeeper
-      - postgres
       - coordinator
     ports:
       - "8083:8083"
@@ -69,7 +55,6 @@ services:
     container_name: middlemanager
     depends_on: 
       - zookeeper
-      - postgres
       - coordinator
     ports:
       - "8091:8091"
@@ -85,7 +70,6 @@ services:
     container_name: router
     depends_on:
       - zookeeper
-      - postgres
       - coordinator
     ports:
       - "8888:8888"
@@ -93,3 +77,8 @@ services:
       - router
     env_file:
       - environment
+
+networks:
+  default:
+    external: true
+    name: netflix-net
