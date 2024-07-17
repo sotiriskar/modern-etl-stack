@@ -18,7 +18,7 @@
 
 ## Introduction
 
-The Netflix Big Data Stack is a curated collection of technologies aimed at providing a robust framework for processing, storing, and analyzing large datasets. This stack is inspired by the architecture used by Netflix to manage its massive data pipeline. Please note, this is a demonstration of the tools they use and not the actual implementation used by Netflix.
+The Netflix Big Data Stack is a handpicked set of tools designed to handle big data tasks like processing, storing, and analyzing huge datasets. It's inspired by how Netflix manages its own vast data pipeline, but it's more of a showcase of the tools they use rather than their exact setup.
 
 ## Components
 
@@ -41,7 +41,6 @@ Before you begin, ensure you have the following installed:
 - **Java 8u92+, 11, or 17 (OpenJDK):** Required for running Apache Flink and Apache Druid.
 - **Perl 5**: Required for running Apache Druid. (Optional: You can use the Docker image provided in this repository.)
 - **Dependencies:** Install all required Python libraries with `pip install -r requirements.txt`.
-
 
 ## Installation
 
