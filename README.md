@@ -44,107 +44,109 @@ Before you begin, ensure you have the following installed:
 
 ## Installation
 
-### Setting Up MinIO
+### Setting Up Docker Containers & jars
 
-Open a terminal, navigate to the directory where your docker-compose.yml file is located, and run the following command:
-
-```bash
-docker-compose up -d
-```
-
-This command will start the MinIO server in detached mode, making it accessible at http://localhost:9000 for the main interface and http://localhost:9001 for the administrative console.
-
-You can now proceed to configure and use MinIO as part of your Big Data Stack demonstration. I kept this part separate from the main docker-compose file to make it easier to manage and run the stack without MinIO if you prefer to use another object storage service.
-
-### Setting Up Apache Kafka
-
-Open a terminal, navigate to the directory where your docker-compose.yml file is located, and run the following command:
+1. Navigate to the `docker` directory and run the following command to start the Docker containers:
 
 ```bash
-docker-compose up -d
+cd docker
 ```
 
-This command will start the Apache Kafka ecosystem in detached mode, allowing you to use the various services provided by the stack.
-
-**Zookeeper-Kafka:** A Zookeeper instance required for managing Kafka brokers.
-**Broker-Kafka:** The Kafka broker itself, which handles the message streaming.
-**Schema-Registry:** Manages and enforces schemas for Kafka messages.
-**KsqlDB-Server:** Enables real-time stream processing using SQL syntax.
-**Connect:** Allows for integration with external data sources and sinks.
-**Control-Center-Kafka:** The Confluent Control Center for managing and monitoring the Kafka ecosystem.
-
-Each service runs in a separate container and is configured to work together to form a complete Kafka ecosystem, allowing for robust message streaming and processing capabilities. You should also create a folder called `jars` in the root directory and download the following JAR files:
-
-- [jars/flink-sql-connector-kafka-1.15.0.jar](https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.15.0/flink-sql-connector-kafka-1.15.0.jar)
-
-You can then copy these JAR files to the `jars` folder, which will be mounted as a volume in the Flink container. This step is necessary to enable Flink to connect to Kafka and process the messages from the topic.
-
-### Setting Up Apache Flink
-
-Apache Flink can be easily integrated using the PyFlink library, which simplifies the process and requires minimal setup. Simply include PyFlink in your requirements.txt and you'll be ready to run Flink jobs with Python.
-
-### Setting Up Apache Druid
-
-Apache Druid requires a bit more setup due to its Java dependencies and the need to run a separate process for the coordinator, broker, and historical nodes. I've included a Docker image that simplifies this process and allows you to run Druid with minimal configuration. [It's not well tested yet, so use at your own risk.] You can run the Druid Docker image using the following command:
+2. Run the following command to check the status of the Docker containers:
 
 ```bash
-docker-compose up -d
+bash setup.sh
 ```
 
-One other solution is to install Druid natively on your machine, which requires more setup but provides better performance and flexibility. You can find detailed instructions on how to install Druid on the [official website](https://druid.apache.org/docs/30.0.0/tutorials/). A good note is that optionally you could also set up a postgres database to store metadata and other configurations.
+This will spin all the required docker networks, containers and download the required jars, including the Apache Superset.
 
+### Setting Up Druid with Kafka Topics
 
-### Setting Up Apache Superset
+1. Open your web browser and navigate to the Apache Druid UI. Typically, this will be accessible at **`http://localhost:8888`** or the appropriate address where Druid is hosted.
 
-Apache Superset is a modern data exploration and visualization platform that can be easily integrated with the rest of the stack. You can run Superset using the following command:
+2. In the top right corner of the Druid UI, click the Load Data button.
 
-```bash
-git clone https://github.com/apache/superset.git
-cd superset
-```
+3. From the dropdown menu, select Streaming and kick off a new streaming spec.
 
-and then run the following command:
+4. Configure Kafka Ingestion:
 
-```bash
-docker-compose up -d
-```
+    For Bootstrap servers, enter:
+    ```bash
+    broker-kafka:29092
+    ```
 
-This command will start the Superset server in detached mode, making it accessible at http://localhost:8088 for the main interface. Default credentials are admin/admin. You can now proceed to configure and use Superset as part of your Big Data Stack demonstration, connecting it to the various data sources and visualizing the results.
+    And add the Kafka Topic:
 
-Settings > Database Connection > Database > Apache Druid > SQLALCHEMY URI*: druid://host.docker.internal:8082/druid/v2/sql/
+    ```bash
+    processed_sessions
+    ```
 
+1. Hit Apply and then continue to Next: parse data. Follow the steps based on your data parsing needs.
+
+And that's it! You've set up Apache Druid to ingest data from Kafka topics. Now you can start analyzing your real-time data in Druid.
+
+### Setting Up Apache Superset with Apache Druid
+
+1. Open your web browser and navigate to the Apache Superset UI. Typically, this will be accessible at **`http://localhost:8088`** or the appropriate address where Superset is hosted.
+Navigate to Database Connections:
+
+2. In the Superset UI, go to the top right corner and click on your username or the settings icon.
+From the dropdown menu, select Settings.
+Add a New Database Connection:
+
+3. In the Settings menu, select Database Connections.
+Click on the + DATABASE button to add a new database.
+Configure the Database:
+
+4. In the Add Database form, you will need to fill out the details of your Druid connection.
+
+5. Database: Select Apache Druid from the dropdown options.
+
+6. SQLALCHEMY URI: Enter the following URI:
+
+    ```bash
+    druid://host.docker.internal:8082/druid/v2/sql/
+    ```
+
+7. Test the Connection:
+
+Before saving, click the Test Connection button to ensure that Superset can connect to your Druid instance.
+If the connection is successful, you will see a success message. If there is an error, ensure that the Druid server is running and the endpoint is correct.
+Save the Database Connection:
+
+8. Once the connection test is successful, click the Save button to save your new database connection.
+
+That's it! You have successfully connected Apache Superset to Apache Druid. You can now start exploring your data and creating visualizations in Superset.
 
 ### Running the Stack
 
 Once you have set up all the components, you can start running the stack by executing the following command:
 
 ```bash
-cd pipeline
-python producer.py
+python main.py
 ```
 
-This command will start the producer script, which generates random data every second and sends it to the Kafka topic. You can then run the following command to start the consumer script, which reads the data from the Kafka topic and processes it using Apache Flink:
+This will generate 333 records and send them to the Kafka topic `processed_sessions`. Apache Flink will process these records and store them in Apache Druid and a kafka consumer will consume the records and store them in MinIO.
+You can then visualize the data in Apache Superset.
+
+You can also run the individual components separately by following the instructions in the respective sections.
 
 ```bash
-python processor.py
+python main.py -t/--task ['producer', 'processor', 'consumer', 'all']
 ```
 
-This command will start the processor script, which reads the data from the Kafka topic and processes it using Apache Flink. You can use the processed data to populate the Apache Druid database and visualize it using Apache Superset. Additionally, you can store the processed data in MinIO for further analysis and archiving.
-
-```bash
-python consumer.py
-```
-
-This command will start the consumer script, which reads the data from the Kafka topic and processes it using Apache Flink. You can use the processed data to populate the Apache Druid database and visualize it using Apache Superset. Additionally, you can store the processed data in MinIO for further analysis and archiving. MinIO has apache iceberge support, so you can store the data in a table format.
+This will run the specified task.
+**producer**: Generate records and send them to Kafka.
+**processor**: Process records from Kafka and store them in Druid.
+**consumer**: Consume records from Kafka and store them in MinIO.
+**all**: Run all tasks.
 
 ### Conclusion
 
-The Netflix Big Data Stack provides a robust framework for processing, storing, and analyzing large datasets. By combining the power of Apache Kafka, Apache Flink, Apache Druid, Apache Superset, and MinIO, you can build a scalable and efficient data pipeline that meets your organization's needs. This stack is designed to be flexible and extensible, allowing you to customize it to suit your specific requirements. I hope this guide helps you get started with the Netflix Big Data Stack and explore the possibilities of big data processing and analytics.
-
-### How to 
+The Netflix Big Data Stack gives you a powerful setup for handling big data with tools like Apache Kafka, Flink, Druid, Superset, and MinIO. This stack is flexible and scalable, perfect for customizing to fit your needs. I hope this guide helps you kickstart your journey with the Netflix Big Data Stack and unlock new possibilities in data processing and analytics.
 
 ### Sources
+- https://nightlies.apache.org/flink/flink-docs-master/api/python/examples/datastream/index.html
 - https://blog.min.io/a-developers-introduction-to-apache-iceberg-using-minio/
 - https://druid.apache.org/docs/latest/tutorials/
 - https://superset.apache.org/docs/quickstart
-- https://nightlies.apache.org/flink/flink-docs-master/api/python/examples/datastream/index.html

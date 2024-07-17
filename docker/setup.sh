@@ -34,6 +34,19 @@ cd superset
 # Fire up Superset using Docker Compose
 docker compose -f docker-compose-image-tag.yml up -d
 
+# create folder named jars in the root directory & download the required jars
+cd ../../
+# if folder already exists and contains jars, skip downloading
+if [ -d "jars" ]; then
+    echo "Jars folder already exists"
+else
+    mkdir jars
+    cd jars
+    curl -o flink-sql-connector-kafka-1.15.0.jar https://repo.maven.apache.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.15.0/flink-sql-connector-kafka-1.15.0.jar
+
+    echo "Downloaded jar files"
+fi
+
 docker exec -it broker-kafka kafka-topics --create --topic user_sessions --partitions 1 --replication-factor 1 --bootstrap-server localhost:9092 && break || echo "Retrying to create user_sessions..."
 docker exec -it broker-kafka kafka-topics --create --topic processed_sessions --partitions 1 --replication-factor 1 --bootstrap-server localhost:9092 && break || echo "Retrying to create processed_sessions..."
 
